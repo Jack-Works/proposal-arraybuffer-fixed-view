@@ -1,60 +1,71 @@
-# template-for-proposals
+# Fixed view of ArrayBuffer
 
-A repository template for ECMAScript proposals.
+## Status
 
-## Before creating a proposal
+Champion(s): *[Jack Works](https://github.com/Jack-Works)*
+Author(s): *[CrimsonCodes0](https://github.com/CrimsonCodes0), Jack Works*
+Stage: 0
 
-Please ensure the following:
-  1. You have read the [process document](https://tc39.github.io/process-document/)
-  1. You have reviewed the [existing proposals](https://github.com/tc39/proposals/)
-  1. You are aware that your proposal requires being a member of TC39, or locating a TC39 delegate to "champion" your proposal
+## Motivation
 
-## Create your proposal repo
+Provide a fixed view to an `ArrayBuffer` so the application won't be able to access the data they're not supposed to access.
 
-Follow these steps:
-  1.  Click the green ["use this template"](https://github.com/tc39/template-for-proposals/generate) button in the repo header. (Note: Do not fork this repo in GitHub's web interface, as that will later prevent transfer into the TC39 organization)
-  1.  Go to your repo settings “Options” page, under “GitHub Pages”, and set the source to the **main branch** under the root (and click Save, if it does not autosave this setting)
-      1. check "Enforce HTTPS"
-      1. On "Options", under "Features", Ensure "Issues" is checked, and disable "Wiki", and "Projects" (unless you intend to use Projects)
-      1. Under "Merge button", check "automatically delete head branches"
-<!--
-  1.  Avoid merge conflicts with build process output files by running:
-      ```sh
-      git config --local --add merge.output.driver true
-      git config --local --add merge.output.driver true
-      ```
-  1.  Add a post-rewrite git hook to auto-rebuild the output on every commit:
-      ```sh
-      cp hooks/post-rewrite .git/hooks/post-rewrite
-      chmod +x .git/hooks/post-rewrite
-      ```
--->
-  3.  ["How to write a good explainer"][explainer] explains how to make a good first impression.
+## Use cases
 
-      > Each TC39 proposal should have a `README.md` file which explains the purpose
-      > of the proposal and its shape at a high level.
-      >
-      > ...
-      >
-      > The rest of this page can be used as a template ...
+> Consider an application using JavaScript and WebAssembly, communicating through the Wasm heap.
+>
+> If the JS wants to pass around a read-only slice of the Wasm heap (a JS ArrayBuffer object), the JS must either pass around a TypedArray and always make sure to use it's .byteLength and .byteOffset properties to ensure correct usage, or copy the memory in the slice into a new ArrayBuffer.
+>
+> One wants the slice to be read-only in order to prevent writing to the memory, and one doesn't want to move around the entire ArrayBuffer object, as that would allow reading into the memory at practically arbitrary locations.
+>
+> Without being able to do both, view a section of an ArrayBuffer, and mark it as read-only, developers will have to find a workaround, which will likely come to creating ad-hoc wrapper classes or copying.
 
-      Your explainer can point readers to the `index.html` generated from `spec.emu`
-      via markdown like
+-- By CrimsonCodes0 https://github.com/Jack-Works/proposal-arraybuffer-fixed-view/issues/1
 
-      ```markdown
-      You can browse the [ecmarkup output](https://ACCOUNT.github.io/PROJECT/)
-      or browse the [source](https://github.com/ACCOUNT/PROJECT/blob/HEAD/spec.emu).
-      ```
+## Possible API design
 
-      where *ACCOUNT* and *PROJECT* are the first two path elements in your project's Github URL.
-      For example, for github.com/**tc39**/**template-for-proposals**, *ACCOUNT* is "tc39"
-      and *PROJECT* is "template-for-proposals".
+### Possible API 1:
 
+Add a new option to the `TypedArray` API and `DataView` API.
 
-## Maintain your proposal repo
+```js
+const x = new Uint8Array(buffer, { byteOffset: 4, length: 12, fixed: true })
+x.buffer // undefined
+```
 
-  1. Make your changes to `spec.emu` (ecmarkup uses HTML syntax, but is not HTML, so I strongly suggest not naming it ".html")
-  1. Any commit that makes meaningful changes to the spec, should run `npm run build` and commit the resulting output.
-  1. Whenever you update `ecmarkup`, run `npm run build` and commit any changes that come from that dependency.
+By limiting the `.buffer` property to get the original buffer, we can prevent the holder of `x` to construct full access to the underlying ArrayBuffer.
 
-  [explainer]: https://github.com/tc39/how-we-work/blob/HEAD/explainer.md
+### Possible API 2:
+
+Add a new `ArrayBufferSlice`, this is a new kind of intermediate "view" to the `ArrayBuffer` which limits the view size.
+
+```js
+const slice = new ArrayBufferSlice(buffer, 4, 12)
+const x = new Uint8Array(slice)
+slice.buffer === slice
+slice.byteOffset === 0
+slice.byteLength === 12
+```
+
+From the perspective of the holder of `x`, it looks like they're accessing the full ArrayBuffer thus there is no way to expand the view anymore.
+
+<!-- ## Implementations
+
+### Polyfill/transpiler implementations
+
+*A JavaScript implementation of the proposal, ideally packaged in a way that enables easy, realistic experimentation. See [implement.md](https://github.com/tc39/how-we-work/blob/master/implement.md) for details on creating useful prototype implementations.*
+
+You can try out the implementation of this proposal in the npm package [frobnicate](https://www.npmjs.com/package/frobnicate). Note, this package has semver major version 0 and is subject to change.
+
+### Native implementations
+
+*For Stage 3+ proposals, and occasionally earlier, it is helpful to link to the implementation status of full, end-to-end JavaScript engines. Filing these issues before Stage 3 is somewhat unnecessary, though, as it's not very actionable.*
+
+- [V8]() (*Links to tracking issues in each JS engine*)
+- [JSC]()
+- [SpiderMonkey]()
+- ... -->
+
+<!-- ## Q&A
+**Q**: Why is the proposal this way?
+**A**: Because reasons! -->
