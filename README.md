@@ -3,7 +3,9 @@
 ## Status
 
 Champion(s): *[Jack Works](https://github.com/Jack-Works)*
+
 Author(s): *[CrimsonCodes0](https://github.com/CrimsonCodes0), Jack Works*
+
 Stage: 0
 
 ## Motivation
