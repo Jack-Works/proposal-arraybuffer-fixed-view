@@ -44,9 +44,9 @@ Add a new `ArrayBufferSlice`, this is a new kind of intermediate "view" to the `
 ```js
 const slice = new ArrayBufferSlice(buffer, 4, 12)
 const x = new Uint8Array(slice)
-slice.buffer === slice
-slice.byteOffset === 0
-slice.byteLength === 12
+x.buffer === slice
+x.byteOffset === 0
+x.byteLength === 12
 ```
 
 From the perspective of the holder of `x`, it looks like they're accessing the full ArrayBuffer thus there is no way to expand the view anymore.
