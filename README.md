@@ -8,9 +8,17 @@ Author(s): *[CrimsonCodes0](https://github.com/CrimsonCodes0), Jack Works*
 
 Stage: 0
 
+Related proposal: [Freeze ArrayBuffer and Readonly view to ArrayBuffer](https://github.com/Jack-Works/proposal-readonly-arraybuffer)
+
+## Presentations
+
+- [For stage 1 on 2021/04](https://docs.google.com/presentation/d/1TGLvflOG63C5iHush597ffKTenoYowc3MivQEhAM20w/edit?usp=sharing)
+
 ## Motivation
 
-Provide a fixed view to an `ArrayBuffer` so the application won't be able to access the data they're not supposed to access.
+Provide a fixed view to an `ArrayBuffer` so the third party code won't be able to access the data they're not supposed to access.
+
+This is impossible today because the `.buffer` property on the TypedArray and DataView can get the original ArrayBuffer.
 
 ## Use cases
 
@@ -39,12 +47,23 @@ By limiting the `.buffer` property to get the original buffer, we can prevent th
 
 ### Possible API 2:
 
-Add a new `ArrayBufferSlice`, this is a new kind of intermediate "view" to the `ArrayBuffer` which limits the view size.
+Add a new kind of `ArrayBuffer`. It is a "proxy" to the `ArrayBuffer` which limits the view window.
 
 ```js
+// Possible API 1
 const slice = new ArrayBufferSlice(buffer, 4, 12)
 const x = new Uint8Array(slice)
 x.buffer === slice
+x.byteOffset === 0
+x.byteLength === 12
+```
+
+```js
+// Possible API 2
+const slice = new ArrayBuffer(buffer, 4, 12)
+const x = new Uint8Array(slice)
+x.buffer === slice
+x.buffer instanceof ArrayBuffer
 x.byteOffset === 0
 x.byteLength === 12
 ```
