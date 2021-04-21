@@ -1,3 +1,5 @@
+This repo is merged with [Freeze ArrayBuffer](https://github.com/Jack-Works/proposal-readonly-arraybuffer).
+
 # Fixed view of ArrayBuffer
 
 ## Status
